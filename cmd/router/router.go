@@ -34,6 +34,7 @@ func New(deps Deps) *fiber.App {
 	app.Get("/items", deps.Items.List)
 	app.Get("/items/:id", deps.Items.Get)
 	app.Post("/items", appmw.RequireGuildID, deps.Items.Register)
+	app.Post("/items/:id/purchase", appmw.RequireGuildID, deps.Items.Purchase)
 	app.Post("/items/:id/bid", appmw.RequireGuildID, deps.Bids.Place)
 	app.Delete("/items/:id/bid/:bid_id", appmw.RequireGuildID, deps.Bids.Withdraw)
 

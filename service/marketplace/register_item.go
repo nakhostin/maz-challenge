@@ -27,6 +27,19 @@ func (s *Service) RegisterItem(ctx context.Context, cmd RegisterItemCommand) (*I
 		return nil, shared.ErrInvalidState
 	}
 
+	if cmd.IdempotencyKey != "" {
+		if existing, err := s.items(s.db).FindByIdempotencyKey(ctx, cmd.IdempotencyKey); err == nil {
+			oracle, err := s.oracle(s.db).List(ctx)
+			if err != nil {
+				return nil, err
+			}
+			view := toItemView(existing, oracle)
+			return &view, nil
+		} else if err != shared.ErrNotFound {
+			return nil, err
+		}
+	}
+
 	var view *ItemView
 	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		items := s.items(tx)
@@ -49,6 +62,10 @@ func (s *Service) RegisterItem(ctx context.Context, cmd RegisterItemCommand) (*I
 			Status:        shared.ItemStatusAvailable,
 			ListPrice:     cmd.ListPrice,
 			CreatedAt:     cmd.Now,
+		}
+		if cmd.IdempotencyKey != "" {
+			key := cmd.IdempotencyKey
+			item.IdempotencyKey = &key
 		}
 
 		switch itemType {

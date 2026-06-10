@@ -19,6 +19,7 @@ import (
 	tmock "maz/domain/trading/mock"
 	wmock "maz/domain/wallet/mock"
 	migration "maz/migrations"
+	omock "maz/pkg/oracle/mock"
 	"maz/pkg/postgres"
 	smarket "maz/service/marketplace"
 	strading "maz/service/trading"
@@ -52,7 +53,7 @@ func main() {
 
 	walletSvc := swallet.NewService(db.GORM)
 	tradingSvc := strading.NewService(db.GORM, walletSvc, auctionDuration)
-	marketSvc := smarket.NewService(db.GORM, tradingSvc, auctionDuration)
+	marketSvc := smarket.NewService(db.GORM, tradingSvc, walletSvc, auctionDuration)
 
 	httpAddr := envString("HTTP_ADDR", ":8080")
 	app := router.New(router.Deps{
@@ -65,6 +66,7 @@ func main() {
 	workerCtx, stopWorker := context.WithCancel(ctx)
 	defer stopWorker()
 	go worker.RunAuctionCloser(workerCtx, tradingSvc, envDuration("AUCTION_CLOSER_INTERVAL", time.Minute))
+	go worker.RunOracleSync(workerCtx, db.GORM, omock.NewClient(time.Now().UTC()), envDuration("ORACLE_SYNC_INTERVAL", 30*time.Second))
 
 	go func() {
 		log.Printf("listening on %s", httpAddr)

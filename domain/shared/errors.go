@@ -8,6 +8,7 @@ var (
 	ErrDailyCapExceeded    = errors.New("daily purchase cap exceeded")
 	ErrInvalidState        = errors.New("invalid state")
 	ErrSelfBid             = errors.New("cannot bid on own item")
+	ErrSelfPurchase        = errors.New("cannot purchase own item")
 	ErrBidTooLow           = errors.New("bid must be at least 5% higher than current highest")
 	ErrCannotWithdrawBid   = errors.New("highest bidder cannot withdraw bid")
 	ErrAuctionNotActive    = errors.New("auction is not active")

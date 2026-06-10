@@ -197,6 +197,71 @@ func (s *Service) Credit(ctx context.Context, tx *gorm.DB, p CreditParams) error
 	return wallets.Save(ctx, w)
 }
 
+// Spend debits available balance immediately (limit-order purchases).
+func (s *Service) Spend(ctx context.Context, tx *gorm.DB, p SpendParams) error {
+	wallets, ledgers := s.repos(tx)
+	guildID, err := uuid.Parse(p.GuildID)
+	if err != nil {
+		return shared.ErrInvalidState
+	}
+	refID, err := uuid.Parse(p.ReferenceID)
+	if err != nil {
+		return shared.ErrInvalidState
+	}
+	if p.IdempotencyKey != "" {
+		if _, err := ledgers.FindByIdempotencyKey(ctx, p.IdempotencyKey); err == nil {
+			return nil
+		} else if err != shared.ErrNotFound {
+			return err
+		}
+	}
+
+	w, err := wallets.GetForUpdate(ctx, guildID)
+	if err != nil {
+		return err
+	}
+	guild, err := ensureGuild(ctx, wallets, w, guildID)
+	if err != nil {
+		return err
+	}
+
+	todaySpend, err := wallets.GetTodaySpend(ctx, guildID, p.Now)
+	if err != nil {
+		return err
+	}
+	if err := canCommit(w, guild, todaySpend, p.Amount); err != nil {
+		return err
+	}
+
+	w.Balance -= p.Amount
+	todaySpend += p.Amount
+
+	var idem *string
+	if p.IdempotencyKey != "" {
+		idem = &p.IdempotencyKey
+	}
+	if err := ledgers.Append(ctx, &entity.WalletLedger{
+		ID:             uuid.New(),
+		GuildID:        guildID,
+		EntryType:      shared.LedgerEntryDebit,
+		Amount:         p.Amount,
+		ReferenceType:  p.ReferenceType,
+		ReferenceID:    refID,
+		IdempotencyKey: idem,
+		CreatedAt:      p.Now,
+	}); err != nil {
+		return err
+	}
+	if err := wallets.Save(ctx, w); err != nil {
+		return err
+	}
+	return wallets.UpsertTodaySpend(ctx, &entity.DailySpend{
+		GuildID:   guildID,
+		SpendDate: p.Now,
+		Amount:    todaySpend,
+	})
+}
+
 func canCommit(w *entity.Wallet, guild *entity.Guild, todaySpend, amount int64) error {
 	if w.AvailableBalance() < amount {
 		return shared.ErrInsufficientFunds

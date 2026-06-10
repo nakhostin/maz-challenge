@@ -16,9 +16,11 @@ type ItemRepository interface {
 	GetForUpdate(ctx context.Context, id uuid.UUID) (*entity.Item, error)
 	List(ctx context.Context) ([]entity.Item, error)
 	ExistsLegendaryName(ctx context.Context, name string) (bool, error)
+	FindByIdempotencyKey(ctx context.Context, key string) (*entity.Item, error)
 }
 
-// OraclePriceRepository reads cached oracle reference prices.
+// OraclePriceRepository reads and writes cached oracle reference prices.
 type OraclePriceRepository interface {
 	List(ctx context.Context) (map[string]int64, error)
+	Upsert(ctx context.Context, price *entity.OraclePrice) error
 }

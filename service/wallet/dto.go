@@ -49,3 +49,13 @@ type CreditParams struct {
 	ReferenceID   string
 	Now           time.Time
 }
+
+// SpendParams configures an immediate purchase debit (no prior reservation).
+type SpendParams struct {
+	GuildID        string
+	Amount         int64
+	ReferenceType  string
+	ReferenceID    string
+	IdempotencyKey string
+	Now            time.Time
+}

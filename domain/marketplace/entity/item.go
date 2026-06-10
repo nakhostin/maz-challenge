@@ -16,8 +16,9 @@ type Item struct {
 	Name          string            `gorm:"type:text;not null"`
 	ItemType      shared.ItemType   `gorm:"column:item_type;type:text;not null"`
 	Status        shared.ItemStatus `gorm:"type:text;not null"`
-	ListPrice     int64             `gorm:"not null;check:list_price > 0"`
-	CreatedAt     time.Time         `gorm:"not null;autoCreateTime"`
+	ListPrice      int64             `gorm:"not null;check:list_price > 0"`
+	IdempotencyKey *string           `gorm:"type:text;uniqueIndex"`
+	CreatedAt      time.Time         `gorm:"not null;autoCreateTime"`
 }
 
 func (Item) TableName() string { return "items" }

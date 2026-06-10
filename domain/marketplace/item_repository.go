@@ -68,6 +68,18 @@ func (r *itemRepository) ExistsLegendaryName(ctx context.Context, name string) (
 	return count > 0, nil
 }
 
+func (r *itemRepository) FindByIdempotencyKey(ctx context.Context, key string) (*entity.Item, error) {
+	var item entity.Item
+	err := r.db.WithContext(ctx).Where("idempotency_key = ?", key).First(&item).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, shared.ErrNotFound
+		}
+		return nil, err
+	}
+	return &item, nil
+}
+
 func (r *itemRepository) find(ctx context.Context, id uuid.UUID, forUpdate bool) (*entity.Item, error) {
 	q := r.db.WithContext(ctx)
 	if forUpdate {
@@ -101,4 +113,11 @@ func (r *oraclePriceRepository) List(ctx context.Context) (map[string]int64, err
 		out[row.ItemName] = row.BasePrice
 	}
 	return out, nil
+}
+
+func (r *oraclePriceRepository) Upsert(ctx context.Context, price *entity.OraclePrice) error {
+	if price == nil || price.ItemName == "" || price.BasePrice <= 0 {
+		return shared.ErrInvalidState
+	}
+	return r.db.WithContext(ctx).Save(price).Error
 }

@@ -74,3 +74,21 @@ func (h *ItemHandler) Get(c *fiber.Ctx) error {
 	}
 	return writeJSON(c, http.StatusOK, view)
 }
+
+func (h *ItemHandler) Purchase(c *fiber.Ctx) error {
+	guildID, ok := middleware.GuildID(c)
+	if !ok {
+		return writeError(c, errMissingGuild)
+	}
+
+	view, err := h.marketplace.PurchaseItem(c.Context(), smarket.PurchaseItemCommand{
+		ItemID:         c.Params("id"),
+		BuyerGuildID:   guildID.String(),
+		IdempotencyKey: c.Get("Idempotency-Key"),
+		Now:            time.Now().UTC(),
+	})
+	if err != nil {
+		return writeError(c, err)
+	}
+	return writeJSON(c, http.StatusOK, view)
+}

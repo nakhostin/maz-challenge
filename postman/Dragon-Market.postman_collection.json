@@ -123,6 +123,25 @@
             "description": "Legendary items start an active auction automatically. Name must be globally unique among legendaries."
           },
           "response": []
+        },
+        {
+          "name": "Purchase Item (Limit Order)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Guild-ID",
+                "value": "22222222-2222-2222-2222-222222222222"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": "{{baseUrl}}/items/a1000001-0000-4000-8000-000000000001/purchase",
+            "description": "Buy a listed Common/Rare item at fixed list price.\n\n**Seed:** Healing Draught (500 gold) — use a buyer guild other than Iron Vanguard."
+          },
+          "response": []
         }
       ]
     },

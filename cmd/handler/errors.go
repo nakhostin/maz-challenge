@@ -32,6 +32,8 @@ func mapError(err error) (int, string) {
 		return http.StatusPaymentRequired, err.Error()
 	case errors.Is(err, shared.ErrSelfBid):
 		return http.StatusConflict, err.Error()
+	case errors.Is(err, shared.ErrSelfPurchase):
+		return http.StatusConflict, err.Error()
 	case errors.Is(err, shared.ErrBidTooLow):
 		return http.StatusBadRequest, err.Error()
 	case errors.Is(err, shared.ErrCannotWithdrawBid):
