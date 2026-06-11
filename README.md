@@ -15,13 +15,37 @@ cp .env.example .env
 docker compose up --build
 ```
 
-API: `http://localhost:8080`  
-Postgres: `localhost:5432`
+| Service | URL |
+|---------|-----|
+| API | http://localhost:8080 |
+| Postgres | localhost:5432 |
 
 Health check:
 
 ```bash
 curl http://localhost:8080/health
+```
+
+### Docker commands
+
+```bash
+# Build image only
+docker compose build api
+
+# Rebuild without cache
+docker compose build --no-cache api
+
+# Run detached
+docker compose up -d
+
+# Logs
+docker compose logs -f api
+
+# Stop and remove containers (keeps postgres volume)
+docker compose down
+
+# Stop and remove containers + database volume
+docker compose down -v
 ```
 
 ## Configuration

@@ -1,0 +1,32 @@
+# Git & IDE
+.git
+.gitignore
+.cursor
+.vscode
+.idea
+
+# Environment (injected at runtime via compose)
+.env
+.env.*
+!.env.example
+
+# Documentation & assets (not needed in image)
+*.md
+docs/
+postman/
+AGENTS.md
+
+# Tests
+**/*_test.go
+**/*_test.py
+
+# Docker (avoid recursive context)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Misc
+tmp/
+dist/
+coverage.out
+coverage.html
